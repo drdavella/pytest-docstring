@@ -57,6 +57,12 @@ class DocstringFile(pytest.File):
                         yield DocstringFuncItem(
                             'method:' + name, self, node, method=True)
 
+def _check_missing_docstring(node, label):
+    docstring = ast.get_docstring(node)
+    if docstring is None:
+        raise DocstringMissingException(
+            "Public {} '{}' is missing a docstring".format(label, node.name))
+
 class DocstringFuncItem(pytest.Item):
     def __init__(self, name, parent, node, method=False):
         super(DocstringFuncItem, self).__init__(name, parent)
@@ -64,13 +70,11 @@ class DocstringFuncItem(pytest.Item):
         self.method = method
 
     def runtest(self):
+        label = 'method' if self.method else 'function'
+        _check_missing_docstring(self.node, label)
 
     def reportinfo(self):
         return self.fspath, self.node.lineno, "[docstring] %s" % self.name
-        docstring = ast.get_docstring(self.node)
-        if docstring is None:
-            raise DocstringMissingException(
-                "Public function '{}' is missing a docstring".format(funcname))
 
     def repr_failure(self, excinfo):
         if isinstance(excinfo.value, DocstringMissingException):
@@ -85,7 +89,11 @@ class DocstringClassItem(pytest.Item):
         return self.fspath, self.cls.lineno, "[docstring] %s" % self.name
 
     def runtest(self):
-        print("I'm a class")
+        _check_missing_docstring(self.cls, 'class')
+
+    def repr_failure(self, excinfo):
+        if isinstance(excinfo.value, DocstringMissingException):
+            return str(excinfo.value)
 
 class DocstringMissingException(Exception):
     """ Custom exception to indicate missing docstring for public function """
