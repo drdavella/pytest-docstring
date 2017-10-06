@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 PACKAGENAME = 'pytest_docstring'
-VERSION = ''
+VERSION = '0.1.0'
 DESCRIPTION = ''
 AUTHOR = "Dan D'Avella"
 AUTHOR_EMAIL = 'ddavella@stsci.edu'
@@ -23,8 +23,7 @@ setup(name=PACKAGENAME,
       url=URL,
       long_description=LONG_DESCRIPTION,
       entry_points=entry_points,
-      packages=find_packages('src'),
-      package_dir={'' : 'src'},
+      packages=find_packages(),
       py_modules=['pytest_docstring'],
       zip_safe = False,
       classifiers = [
