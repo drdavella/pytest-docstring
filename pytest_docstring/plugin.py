@@ -44,6 +44,9 @@ class DocstringFile(pytest.File):
         source = self.fspath.open()
         module = ast.parse(source.read())
         for node in module.body:
+            # TODO: eventually this should be configurable from the command line
+            if hasattr(node, 'name') and node.name.startswith('_'):
+                continue
             if isinstance(node, ast.FunctionDef):
                 yield DocstringFuncItem('function:' + node.name, self, node)
             elif isinstance(node, ast.ClassDef):
@@ -61,10 +64,6 @@ class DocstringFuncItem(pytest.Item):
         self.method = method
 
     def runtest(self):
-        funcname = self.node.name
-        # TODO: eventually this should be configurable from the command line
-        if funcname.startswith('_'):
-            return
 
     def reportinfo(self):
         return self.fspath, self.node.lineno, "[docstring] %s" % self.name
