@@ -45,13 +45,14 @@ class DocstringFile(pytest.File):
         module = ast.parse(source.read())
         for node in module.body:
             if isinstance(node, ast.FunctionDef):
-                yield DocstringFuncItem('name', self, node)
+                yield DocstringFuncItem('function:' + node.name, self, node)
             elif isinstance(node, ast.ClassDef):
-                yield DocstringClassItem('clsname', self, node)
+                yield DocstringClassItem('class:' + node.name, self, node)
                 for method in node.body:
                     if isinstance(method, ast.FunctionDef):
+                        name = node.name + '.' + method.name
                         yield DocstringFuncItem(
-                            'method', self, node, method=True)
+                            'method:' + name, self, node, method=True)
 
 class DocstringFuncItem(pytest.Item):
     def __init__(self, name, parent, node, method=False):
@@ -65,6 +66,8 @@ class DocstringFuncItem(pytest.Item):
         if funcname.startswith('_'):
             return
 
+    def reportinfo(self):
+        return self.fspath, self.node.lineno, "[docstring] %s" % self.name
         docstring = ast.get_docstring(self.node)
         if docstring is None:
             raise DocstringMissingException(
@@ -78,6 +81,9 @@ class DocstringClassItem(pytest.Item):
     def __init__(self, name, parent, cls):
         super(DocstringClassItem, self).__init__(name, parent)
         self.cls = cls
+
+    def reportinfo(self):
+        return self.fspath, self.cls.lineno, "[docstring] %s" % self.name
 
     def runtest(self):
         print("I'm a class")
